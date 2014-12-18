@@ -58,7 +58,7 @@
 			}
 
 			function computePoints(x,y,z){//outputs vector based on vectorformula
-				return [eval(vectorFormula[0]), eval(vectorFormula[1]), eval(vectorFormula[2])];
+				return new THREE.Vector3(eval(vectorFormula[0]), eval(vectorFormula[1]), eval(vectorFormula[2]));
 			}
 
 			function init(){
@@ -180,7 +180,6 @@
 	            setInterval(function(){
 	            	cube.material.color.offsetHSL(0.001,0,0);
 	            },10);
-	            
 
             
 			}
@@ -198,23 +197,7 @@
 				
 				scene.children = [];
 				scene.add(spriteGroup)
-				spriteGroup.children = [];
-				var size = params.fsize;
-				var freq = params.ffreq;
-				for(var x = -size; x <= size; x+=size/freq)
-	            	for(var y = -size; y <= size; y+=size/freq)
-	            		for(var z = -size; z <= size; z+=size/freq){
-	            			var start = new THREE.Vector3(x,y,z);
-		            		
-		            		var xc = eval(vectorFormula[0]);
-		            		var yc = eval(vectorFormula[1]);
-		            		var zc = eval(vectorFormula[2]);
-
-		            		var arrow = ah(start, new THREE.Vector3(xc,yc,zc));
-		            		// console.log(arrow);
-		            		// console.log(arrow);
-		            		spriteGroup.add(arrow);
-	            		}				
+				addArrows();
 
 	            var w = params.width;
 	            var h = params.height;
@@ -256,6 +239,34 @@
 				// cube.geometry.verticesNeedUpdate = true
 				scene.add( cube );
 			}
+			
+			function addArrows(){
+				spriteGroup.children = [];
+				var size = params.fsize;
+				var freq = params.ffreq;
+				for(var x = -size; x <= size; x+=size/freq)
+	            		for(var y = -size; y <= size; y+=size/freq)
+	            		for(var z = -size; z <= size; z+=size/freq){
+	            			var start = new THREE.Vector3(x,y,z);
+		            		
+		            		var xc = eval(vectorFormula[0]);
+		            		var yc = eval(vectorFormula[1]);
+		            		var zc = eval(vectorFormula[2]);
+
+		            		var arrow = ah(start, new THREE.Vector3(xc,yc,zc));
+		            		// console.log(arrow);
+		            		// console.log(arrow);
+		            		spriteGroup.add(arrow);
+	            		}
+			}
+			
+			function updateArrows(){
+				for(var i = 0; i < spriteGroup.children.length; i++){
+					var arrow = spriteGroup.children[i];
+					var pos = arrow.position;
+					arrow.setDirection(computePoints(pos.x,pos.y,pos.z).normalize());
+				}
+			}
 
 			function animate(){
 				requestAnimationFrame(animate);
@@ -266,9 +277,11 @@
 				camera.lookAt(scene.position);
 				
 				
-				t+=0.01;
-				if(!pause)
-					updateGeometryVertices()
+				if(!pause){
+					updateGeometryVertices();
+					t+=0.01;
+					updateArrows();
+				}
 					
 
 				//stuff you want to happen continuously here
@@ -281,9 +294,7 @@
 				for(var vindex in cube.geometry.vertices){
 					var vertex = cube.geometry.vertices[vindex];
 					var offset = scene.localToWorld(vertex.clone()).add(cube.position);//this gets the vertex's position relative to the scene's origin, which is what we want
-					
-					var movement = computePoints(offset.x, offset.y, offset.z);
-					var movementVector = new THREE.Vector3(movement[0],movement[1], movement[2]);
+					var movementVector = computePoints(offset.x, offset.y, offset.z);
 					movementVector.divideScalar(params.speed);//we don't want it moving too quickly
 					vertex.add(movementVector);//moving the actual thing
 				}
