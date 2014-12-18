@@ -1,0 +1,338 @@
+<html>
+	<!--Template made by mjkaufer- http://github.com/mjkaufer-->
+	<head>
+		<title>Vector Field Simulator</title>
+		<style>
+			body{
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+				color:white;
+				font-size:0.8em;
+				line-height:0.25em;
+		        font-family:sans-serif;
+		        font-weight:bold;
+		        color:#336E7B;
+			}
+			a{
+				color:#336E7B;
+			}
+			canvas{z-index:-1;}
+
+		</style>
+	</head>
+	<body>
+
+    <script src="./js/three.min.js"></script>
+    <script src="./js/controls/TrackballControls.js"></script>
+    <script src="./js/BoxGeometry.js"></script>
+    <script src="./js/ArrowHelper.js"></script>
+    <script src="./js/dat.gui.js"></script>
+    <!--<script src="js/setup.js"></script>-->
+
+		<div style="position:absolute;margin-left:25px;" id="h">
+			<h2>By <a href="http://github.com/mjkaufer">mjkaufer</a></h2>
+		</div>
+		<div id="canvas">
+			
+		</div>
+
+		<script>
+			var container;
+			var camera, scene, renderer, controls;
+			var mouseX, mouseY;
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+			var particleMaterial; //an example particle material to use
+			var count = 0;//increases each call of render
+			vectorFormula = [];
+			var pause = false;
+
+			//declare other vars here
+
+			init();
+			animate();
+
+			function $(el){
+				return document.getElementById(el);
+			}
+
+			function computePoints(x,y,z){//outputs vector based on vectorformula
+				return [eval(vectorFormula[0]), eval(vectorFormula[1]), eval(vectorFormula[2])];
+			}
+
+			function init(){
+				
+				
+				
+				var gui = new dat.GUI({
+					height : 5 * 32 - 1
+				});
+				
+				var Params = function() {
+					this.x = 'y/(x*x+y*y)';
+					this.y = '-x/(x*x+y*y)';
+					this.z = '1';
+					this.width = 3;
+					this.height = 1;
+					this.depth = 1;
+					this.offsetX = 2;
+					this.offsetY = -1;
+					this.offsetZ = 0;
+					this.wcs = 10;
+					this.hcs = 10;
+					this.dcs = 10;
+					this.speed = 4;
+					this.pause = function(){
+						pause = !pause;
+					};
+					this.restart = function(){
+						createStuff()
+					}
+				};
+				
+				params = new Params();
+				// gui.remember(params);
+				
+				gui.add(params,"x").name("X Equation").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"y").name("Y Equation").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"z").name("Z Equation").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"width").name("Width").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"height").name("Height").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"depth").name("Depth").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"wcs").name("Width Cross Sections").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"hcs").name("Height Cross Sections").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"dcs").name("Depth Cross Sections").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"offsetX").name("Shape's X Offset").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"offsetY").name("Shape's Y Offset").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"offsetZ").name("Shape's Z Offset").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"speed").name("Slowness");
+				gui.add(params,"pause").name("Pause")
+				gui.add(params,"restart").name("Restart");
+				
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				$('canvas').appendChild( renderer.domElement );
+				
+				
+				camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
+				camera.position.z = 10;//sets up camera
+
+				scene = new THREE.Scene();//scene setup
+
+				controls = new THREE.TrackballControls(camera);//sets up controls
+				count = 0;
+				var PI2 = Math.PI * 2;//constant for 2pi
+
+
+				//rest of your setup here
+
+			
+				// var normal = new THREE.Vector3( 0, 1, 0 );
+				// var color = new THREE.Color( 0xffaa00 );
+				// var face = new THREE.Face3( 0, 1, 2, normal, color, 0 );
+				// scene.add(face);
+	
+				var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+				scene.add( light );
+				
+
+	            // scene.add(sprite);
+	            spriteGroup = new THREE.Object3D();
+	            scene.add(spriteGroup);
+	            renderer.setClearColor(0xededed);
+	            
+
+	            
+	            createStuff();
+	            
+
+            
+			}
+			
+			function ah(pos, dir){
+				dir = dir.normalize();//make sure it's a unit vector
+				return new THREE.ArrowHelper(dir, pos, 0.5, 0x000000, 0.25, 0.25);
+			}
+
+			function createStuff(){
+				
+				vectorFormula[0] = params.x;
+				vectorFormula[1] = params.y;
+				vectorFormula[2] = params.z;
+				
+				scene.children = [];
+				scene.add(spriteGroup)
+				spriteGroup.children = [];
+				var size = 5;
+				var freq = 2;
+				for(var x = -size; x <= size; x+=size/freq)
+	            	for(var y = -size; y <= size; y+=size/freq)
+	            		for(var z = -size; z <= size; z+=size/freq){
+	            			var start = new THREE.Vector3(x,y,z);
+		            		
+		            		var xc = eval(vectorFormula[0]);
+		            		var yc = eval(vectorFormula[1]);
+		            		var zc = eval(vectorFormula[2]);
+
+		            		var arrow = ah(start, new THREE.Vector3(xc,yc,zc));
+		            		// console.log(arrow);
+		            		// console.log(arrow);
+		            		spriteGroup.add(arrow);
+	            		}				
+
+	            var w = params.width;
+	            var h = params.height;
+	            var d = params.depth;
+	            // var sections = 10;
+	            geometry = new THREE.BoxGeometry( w, h, d, params.wcs, params.hcs, params.dcs);//10 width and height segments, which means more shit in our geometry which means a better flow
+
+	            // tempgeo = new THREE.BoxGeometry( w, h, 0, sections, sections, 0);//100 width and height segments, which means more shit in our geometry which means a better flow
+	            // geometry = boxGeo(3,1,10,10).clone();
+	            // geometry = new THREE.Geometry();
+	            
+	            // for(var x = -w; x <= w; x+= 2*w)
+	            // 	for(var x = -w; x <= w; x+= 2*w)
+	            
+	            // for(var i = 0; i < geometry.vertices.length; i++){
+	            // 	var v = geometry.vertices[i];
+	            // 	if(Math.abs(v.x) == w/2 || Math.abs(v.y) == h/2)
+	            // 		geometry.vertices.push(v.clone());
+	            // 	else
+	            // 		console.log(v);
+	            // }
+	    //         for(var i = 0; i < geometry.vertices.length; i++){
+					// var v = geometry.vertices[i];
+
+		   //        	if(Math.abs(v.x) != w/2 && Math.abs(v.y) != h/2){
+		   //        		geometry.vertices.splice(i,1);
+		   //        		i-=1;
+		   //        	}
+
+	    //         }
+
+	            // console.log(geometry.vertices.length)
+				material = new THREE.MeshBasicMaterial( {color: 0x03A678} );//todo - add color to dat-gui
+				cube = new THREE.Mesh( geometry, material );
+				cube.position.x += params.offsetX;
+				cube.position.y += params.offsetY;
+				cube.position.z += params.offsetZ;
+				// cube.geometry.dynamic = true
+				// cube.geometry.verticesNeedUpdate = true
+				scene.add( cube );
+			}
+
+			function animate(){
+				requestAnimationFrame(animate);
+				render();
+			}
+
+			function render(){
+				camera.lookAt(scene.position);
+				
+				
+				count+=1;
+				if(!pause)
+					updateGeometryVertices()
+					
+
+				//stuff you want to happen continuously here
+				controls.update();
+				renderer.render(scene, camera);
+				
+			}
+			
+			function updateGeometryVertices(){
+				for(var vindex in cube.geometry.vertices){
+					var vertex = cube.geometry.vertices[vindex];
+					var offset = scene.localToWorld(vertex.clone()).add(cube.position);//this gets the vertex's position relative to the scene's origin, which is what we want
+					
+					var movement = computePoints(offset.x, offset.y, offset.z);
+					var movementVector = new THREE.Vector3(movement[0],movement[1], movement[2]);
+					movementVector.divideScalar(params.speed);//we don't want it moving too quickly
+					vertex.add(movementVector);//moving the actual thing
+				}
+				cube.geometry.verticesNeedUpdate = true
+				// scene.remove(cube);
+				// cube = new THREE.Mesh( geometry, material );
+				// scene.add( cube );
+				// cube.setGeometry(geometry)
+
+			}
+			
+			// function boxGeo(height, width, hsections, wsections){//a box with only points on the border, with no points on the inside. Will save a shitton of computing time
+			// 	var geo = new THREE.Geometry();
+			// 	for(var x = -width; x <= width; x+= width / wsections)
+			// 		for(var y = -height; y <= height; y+= height / hsections)
+			// 			if(Math.abs(y) == height || Math.abs(x) == width)//if we're on a border position
+			// 				geo.vertices.push(new THREE.Vector3(x,y,0));
+			// 	return geo;
+				
+			// }
+			
+			
+			function boxGeo(width,height, hsections, wsections){//asdfiuahsdifuhasdfiu
+
+					var a = {
+						x:-width/2,
+						y:-height/2
+					}
+					
+					var b = {
+						x:width/2,
+						y:height/2
+					}
+					
+					
+					var geometry = new THREE.Geometry();
+					
+					geometry.vertices.push( new THREE.Vector3( a.x, a.y, 0));
+					geometry.vertices.push( new THREE.Vector3( b.x, a.y, 0));
+					geometry.vertices.push( new THREE.Vector3( b.x, b.y, 0));
+					geometry.vertices.push( new THREE.Vector3( a.x, b.y, 0));
+
+					geometry.faces.push( new THREE.Face3( 0, 1, 2 )); // counter-clockwise winding order
+					geometry.faces.push( new THREE.Face3( 0, 2, 3 ));
+					
+					
+					for(var x = -width; x <= width; x+= width / wsections)//now we'll add the little segments
+						for(var y = -height; y <= height; y+= height / hsections)
+							if((Math.abs(y) == height || Math.abs(x) == width) && geometry.vertices.indexOf(new THREE.Vector3(x,y,0)) == -1)//if we're on a border position
+								geometry.vertices.push(new THREE.Vector3(x,y,0));
+					
+					// geometry.computeCentroids();
+					geometry.computeFaceNormals();
+					geometry.computeVertexNormals();
+
+					return geometry
+			}
+			
+		</script>
+
+    <!-- A bunch of demos I made for you all - we call it after because everything needs to have isntantiated first-->
+	</body>
+</html>
