@@ -72,9 +72,11 @@
 				var Params = function() {
 					this.x = 'y/(x*x+y*y)';
 					this.y = '-x/(x*x+y*y)';
-					this.z = '1';
+					this.z = '0';
 					this.width = 3;
 					this.height = 1;
+					this.fsize = 5;
+					this.ffreq = 2;
 					this.depth = 1;
 					this.offsetX = 2;
 					this.offsetY = -1;
@@ -128,6 +130,12 @@
 					createStuff();
 				});
 				gui.add(params,"offsetZ").name("Shape's Z Offset").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"fsize").name("Arrow Field Size").onFinishChange(function(){
+					createStuff();
+				});
+				gui.add(params,"ffreq").name("Arrow Frequency").onFinishChange(function(){
 					createStuff();
 				});
 				gui.add(params,"speed").name("Slowness");
@@ -188,8 +196,8 @@
 				scene.children = [];
 				scene.add(spriteGroup)
 				spriteGroup.children = [];
-				var size = 5;
-				var freq = 2;
+				var size = params.fsize;
+				var freq = params.ffreq;
 				for(var x = -size; x <= size; x+=size/freq)
 	            	for(var y = -size; y <= size; y+=size/freq)
 	            		for(var z = -size; z <= size; z+=size/freq){
