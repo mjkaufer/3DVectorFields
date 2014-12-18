@@ -44,7 +44,7 @@
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
 			var particleMaterial; //an example particle material to use
-			var count = 0;//increases each call of render
+			var t = 0;//increases each call of render
 			vectorFormula = [];
 			var pause = false;
 
@@ -153,7 +153,7 @@
 				scene = new THREE.Scene();//scene setup
 
 				controls = new THREE.TrackballControls(camera);//sets up controls
-				count = 0;
+				t = 0;
 				var PI2 = Math.PI * 2;//constant for 2pi
 
 
