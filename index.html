@@ -70,14 +70,14 @@
 				});
 				
 				var Params = function() {
-					this.x = 'y/(x*x+y*y)';
-					this.y = '-x/(x*x+y*y)';
-					this.z = 'Math.atan2(y/(x*x+y*y)-x/(x*x+y*y),10*Math.sin(t*5))/10';
+					this.x = 'y/(x*x+y*y)+x*Math.sin(t*x)';
+					this.y = '-x/(x*x+y*y)+y*Math.cos(t*y)';
+					this.z = '0';
 					this.width = 3;
-					this.height = 1;
-					this.fsize = 5;
-					this.ffreq = 2;
-					this.depth = 1;
+					this.height = 3;
+					this.depth = 3;
+					this.fsize = 10;
+					this.ffreq = 3;
 					this.offsetX = 2;
 					this.offsetY = -1;
 					this.offsetZ = 0;
