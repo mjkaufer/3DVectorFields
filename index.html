@@ -27,6 +27,7 @@
     <script src="./js/controls/TrackballControls.js"></script>
     <script src="./js/BoxGeometry.js"></script>
     <script src="./js/ArrowHelper.js"></script>
+    <script src="./js/AxisHelper.js"></script>
     <script src="./js/dat.gui.js"></script>
     <!--<script src="js/setup.js"></script>-->
 
@@ -150,7 +151,9 @@
 				
 				
 				camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-				camera.position.z = 10;//sets up camera
+				camera.position.z = 20;//sets up camera
+				camera.position.y = 4;
+				camera.position.x = 4;
 
 				scene = new THREE.Scene();//scene setup
 
@@ -166,9 +169,6 @@
 				// var color = new THREE.Color( 0xffaa00 );
 				// var face = new THREE.Face3( 0, 1, 2, normal, color, 0 );
 				// scene.add(face);
-	
-				var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-				scene.add( light );
 				
 
 	            // scene.add(sprite);
@@ -210,6 +210,13 @@
 				vectorFormula[2] = params.k;
 				
 				scene.children = [];
+
+				var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+				scene.add( light );
+
+				var axisHelper = new THREE.AxisHelper( 15 );
+				scene.add( axisHelper )
+
 				scene.add(spriteGroup)
 				addArrows();
 
