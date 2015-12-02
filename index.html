@@ -126,13 +126,13 @@
 				gui.add(params,"dcs").min(0).max(50).step(1).name("Z Cross Sections").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetX").min(-20).max(20).name("Shape's X Offset").onFinishChange(function(){
+				gui.add(params,"offsetX").min(-20).max(20).name("X Position").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetY").min(-20).max(20).name("Shape's Y Offset").onFinishChange(function(){
+				gui.add(params,"offsetY").min(-20).max(20).name("Y Position").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetZ").min(-20).max(20).name("Shape's Z Offset").onFinishChange(function(){
+				gui.add(params,"offsetZ").min(-20).max(20).name("Z Position").onFinishChange(function(){
 					createStuff();
 				});
 				gui.add(params,"fsize").min(1).max(75).step(1).name("Arrow Field Size").onFinishChange(function(){
