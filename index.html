@@ -47,6 +47,8 @@
 			var t = 0;//increases each call of render
 			vectorFormula = [];
 			var pause = false;
+			var dtConstant = 10;
+
 
 			//declare other vars here
 
@@ -70,9 +72,9 @@
 				});
 				
 				var Params = function() {
-					this.x = 'y/(x*x+y*y)+x*Math.sin(t*x)';
-					this.y = '-x/(x*x+y*y)+y*Math.cos(t*y)';
-					this.z = '0';
+					this.i = 'y/(x*x+y*y)+x*Math.sin(t*x)';
+					this.j = '-x/(x*x+y*y)+y*Math.cos(t*y)';
+					this.k = '0';
 					this.width = 3;
 					this.height = 3;
 					this.depth = 3;
@@ -84,7 +86,7 @@
 					this.wcs = 10;
 					this.hcs = 10;
 					this.dcs = 10;
-					this.speed = 4;
+					this.dt = 0.01;
 					this.pause = function(){
 						pause = !pause;
 					};
@@ -96,49 +98,49 @@
 				params = new Params();
 				// gui.remember(params);
 				
-				gui.add(params,"x").name("X Equation").onFinishChange(function(){
+				gui.add(params,"i").name("X Equation").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"y").name("Y Equation").onFinishChange(function(){
+				gui.add(params,"j").name("Y Equation").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"z").name("Z Equation").onFinishChange(function(){
+				gui.add(params,"k").name("Z Equation").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"width").name("Width").onFinishChange(function(){
+				gui.add(params,"width").min(0).max(50).name("X Length").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"height").name("Height").onFinishChange(function(){
+				gui.add(params,"height").min(0).max(50).name("Y Length").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"depth").name("Depth").onFinishChange(function(){
+				gui.add(params,"depth").min(0).max(50).name("Z Length").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"wcs").name("Width Cross Sections").onFinishChange(function(){
+				gui.add(params,"wcs").min(0).max(50).step(1).name("X Cross Sections").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"hcs").name("Height Cross Sections").onFinishChange(function(){
+				gui.add(params,"hcs").min(0).max(50).step(1).name("Y Cross Sections").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"dcs").name("Depth Cross Sections").onFinishChange(function(){
+				gui.add(params,"dcs").min(0).max(50).step(1).name("Z Cross Sections").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetX").name("Shape's X Offset").onFinishChange(function(){
+				gui.add(params,"offsetX").min(-20).max(20).name("Shape's X Offset").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetY").name("Shape's Y Offset").onFinishChange(function(){
+				gui.add(params,"offsetY").min(-20).max(20).name("Shape's Y Offset").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"offsetZ").name("Shape's Z Offset").onFinishChange(function(){
+				gui.add(params,"offsetZ").min(-20).max(20).name("Shape's Z Offset").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"fsize").name("Arrow Field Size").onFinishChange(function(){
+				gui.add(params,"fsize").min(1).max(75).step(1).name("Arrow Field Size").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"ffreq").name("Arrow Frequency").onFinishChange(function(){
+				gui.add(params,"ffreq").min(1).max(8).step(1).name("Arrow Frequency").onFinishChange(function(){
 					createStuff();
 				});
-				gui.add(params,"speed").name("Slowness");
+				gui.add(params,"dt").name("Delta t").step(0.01).min(0).max(0.03);
 				gui.add(params,"pause").name("Pause")
 				gui.add(params,"restart").name("Restart");
 				
@@ -181,6 +183,18 @@
 	            	cube.material.color.offsetHSL(0.001,0,0);
 	            },10);
 
+	            window.addEventListener( 'resize', onWindowResize, false );
+
+	            var datDom = document.getElementsByClassName('dg ac')[0]
+
+				datDom.onmouseenter = function(){
+					controls.enabled = false
+				}
+
+				datDom.onmouseleave = function(){
+					controls.enabled = true
+				}
+
             
 			}
 			
@@ -191,9 +205,9 @@
 
 			function createStuff(){
 				t = 0;
-				vectorFormula[0] = params.x;
-				vectorFormula[1] = params.y;
-				vectorFormula[2] = params.z;
+				vectorFormula[0] = params.i;
+				vectorFormula[1] = params.j;
+				vectorFormula[2] = params.k;
 				
 				scene.children = [];
 				scene.add(spriteGroup)
@@ -279,7 +293,7 @@
 				
 				if(!pause){
 					updateGeometryVertices();
-					t+=0.01;
+					t+=params.dt;
 					updateArrows();
 				}
 					
@@ -289,13 +303,13 @@
 				renderer.render(scene, camera);
 				
 			}
-			
+
 			function updateGeometryVertices(){
 				for(var vindex in cube.geometry.vertices){
 					var vertex = cube.geometry.vertices[vindex];
 					var offset = scene.localToWorld(vertex.clone()).add(cube.position);//this gets the vertex's position relative to the scene's origin, which is what we want
 					var movementVector = computePoints(offset.x, offset.y, offset.z);
-					movementVector.divideScalar(params.speed);//we don't want it moving too quickly
+					movementVector.multiplyScalar(params.dt * dtConstant);//we don't want it moving too quickly
 					vertex.add(movementVector);//moving the actual thing
 				}
 				cube.geometry.verticesNeedUpdate = true
@@ -352,9 +366,17 @@
 
 					return geometry
 			}
+
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				controls.handleResize();
+			}
 			
 		</script>
 
-    <!-- A bunch of demos I made for you all - we call it after because everything needs to have isntantiated first-->
 	</body>
 </html>
